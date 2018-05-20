@@ -36,6 +36,7 @@ public class PlayerController : MonoBehaviour
     public Renderer rend;
 
 
+    int currentcNum;
 
 
     //Private Variables
@@ -73,7 +74,7 @@ public class PlayerController : MonoBehaviour
     {
         if (Input.GetKey(KeyCode.LeftShift)) {
 
-            rend.material = mats[2];
+            ColorChange(2);
 
             Vector3 vel = new Vector3(velocity.x * runSpeed, velocity.y * movementSpeed, velocity.z * runSpeed);
 
@@ -84,7 +85,7 @@ public class PlayerController : MonoBehaviour
         }
         else if (Input.GetKey(KeyCode.LeftControl))
         {
-            rend.material = mats[0];
+            ColorChange(0);
 
             Vector3 vel = new Vector3(velocity.x * sneakSpeed, velocity.y * movementSpeed, velocity.z * sneakSpeed);
 
@@ -96,7 +97,7 @@ public class PlayerController : MonoBehaviour
         else
         {
 
-            rend.material = mats[1];
+            ColorChange(1);
 
             Vector3 vel = new Vector3(velocity.x, velocity.y, velocity.z) * movementSpeed;
             //velocity = (new Vector3 (move.x, -currentGravity, move.z)+vel)*movementSpeed;
@@ -303,5 +304,20 @@ public class PlayerController : MonoBehaviour
     }
 
     #endregion
+
+    public void ColorChange(int cNum)
+    {
+
+        if (cNum == currentcNum)
+        {
+
+        }
+        else
+        {
+            rend.material = mats[cNum];
+            currentcNum = cNum;
+        }
+        
+    }
 
 }

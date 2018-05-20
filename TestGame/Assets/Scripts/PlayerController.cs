@@ -9,16 +9,21 @@ public class PlayerController : MonoBehaviour
 
     [Header("Player Options")]
     public float playerHeight;
+    public Material[] mats;
 
     [Header("Movement Options")]
+    public float sneakSpeed;
     public float movementSpeed;
+    public float runSpeed;
     public bool smooth;
     public float smoothSpeed;
+
 
     [Header("Jump Options")]
     public float jumpForce;
     public float jumpSpeed;
     public float jumpDecrease;
+    public float incrementJumpFallSpeed = 0.1f;
 
     [Header("Gravity")]
     public float gravity = 2.5f;
@@ -28,6 +33,9 @@ public class PlayerController : MonoBehaviour
 
     [Header("References")]
     public SphereCollider sphereCol;
+    public Renderer rend;
+
+
 
 
     //Private Variables
@@ -63,15 +71,42 @@ public class PlayerController : MonoBehaviour
 
     private void FinalMove()
     {
+        if (Input.GetKey(KeyCode.LeftShift)) {
 
-        Vector3 vel = new Vector3(velocity.x, velocity.y, velocity.z) * movementSpeed;
-        //velocity = (new Vector3 (move.x, -currentGravity, move.z)+vel)*movementSpeed;
-        //velocity = transform.TransformDirection (velocity);
-        vel = transform.TransformDirection(vel);
-        transform.position += vel * Time.deltaTime;
+            rend.material = mats[2];
 
-        velocity = Vector3.zero;
+            Vector3 vel = new Vector3(velocity.x * runSpeed, velocity.y * movementSpeed, velocity.z * runSpeed);
 
+            vel = transform.TransformDirection(vel);
+            transform.position += vel * Time.deltaTime;
+
+            velocity = Vector3.zero;
+        }
+        else if (Input.GetKey(KeyCode.LeftControl))
+        {
+            rend.material = mats[0];
+
+            Vector3 vel = new Vector3(velocity.x * sneakSpeed, velocity.y * movementSpeed, velocity.z * sneakSpeed);
+
+            vel = transform.TransformDirection(vel);
+            transform.position += vel * Time.deltaTime;
+
+            velocity = Vector3.zero;
+        }
+        else
+        {
+
+            rend.material = mats[1];
+
+            Vector3 vel = new Vector3(velocity.x, velocity.y, velocity.z) * movementSpeed;
+            //velocity = (new Vector3 (move.x, -currentGravity, move.z)+vel)*movementSpeed;
+            //velocity = transform.TransformDirection (velocity);
+
+            vel = transform.TransformDirection(vel);
+            transform.position += vel * Time.deltaTime;
+
+            velocity = Vector3.zero;
+        }
     }
 
     #endregion
@@ -79,7 +114,7 @@ public class PlayerController : MonoBehaviour
     #region Gravity/Grounding
     //Gravity Private Variables
     private bool grounded;
-    private float currentGravity = 0;
+    //	private float currentGravity = 0;
 
     //Grounded Private Variables
     private Vector3 liftPoint = new Vector3(0, 1.2f, 0);
@@ -94,7 +129,7 @@ public class PlayerController : MonoBehaviour
         }
         else
         {
-            currentGravity = 0;
+            //currentGravity = 0;
         }
     }
 
@@ -134,13 +169,19 @@ public class PlayerController : MonoBehaviour
                 //Snapping 
                 if (inputJump == false)
                 {
+
+                    Vector3 avg = new Vector3(transform.position.x, (groundHit.point.y + playerHeight / 2), transform.position.z);
+
                     if (!smooth)
                     {
-                        transform.position = new Vector3(transform.position.x, (groundHit.point.y + playerHeight / 2), transform.position.z);
+                        transform.position = avg;
                     }
                     else
                     {
-                        transform.position = Vector3.Lerp(transform.position, new Vector3(transform.position.x, (groundHit.point.y + playerHeight / 2), transform.position.z), smoothSpeed * Time.deltaTime);
+
+                        transform.position = Vector3.Lerp(transform.position, new Vector3(transform.position.x, (groundHit.point.y + playerHeight / 2), transform.position.z), (smoothSpeed) * Time.deltaTime);
+
+
                     }
                 }
 
@@ -176,6 +217,8 @@ public class PlayerController : MonoBehaviour
 
     }
 
+
+
     #endregion
 
     #region Collision
@@ -183,7 +226,13 @@ public class PlayerController : MonoBehaviour
     private void CollisionCheck()
     {
         Collider[] overlaps = new Collider[4];
-        int num = Physics.OverlapSphereNonAlloc(transform.TransformPoint(sphereCol.center), sphereCol.radius, overlaps, discludePlayer, QueryTriggerInteraction.UseGlobal);
+        Collider myCollider = new Collider();
+        int num = 0;
+        if (sphereCol != null)
+        {
+            num = Physics.OverlapSphereNonAlloc(transform.TransformPoint(sphereCol.center), sphereCol.radius, overlaps, discludePlayer, QueryTriggerInteraction.UseGlobal);
+            myCollider = sphereCol;
+        }
 
         for (int i = 0; i < num; i++)
         {
@@ -192,7 +241,7 @@ public class PlayerController : MonoBehaviour
             Vector3 dir;
             float dist;
 
-            if (Physics.ComputePenetration(sphereCol, transform.position, transform.rotation, overlaps[i], t.position, t.rotation, out dir, out dist))
+            if (Physics.ComputePenetration(myCollider, transform.position, transform.rotation, overlaps[i], t.position, t.rotation, out dir, out dist))
             {
                 Vector3 penetrationVector = dir * dist;
                 Vector3 velocityProjected = Vector3.Project(velocity, -dir);
@@ -211,32 +260,40 @@ public class PlayerController : MonoBehaviour
     private float jumpHeight = 0;
     private bool inputJump = false;
 
+    private float fallMultiplier = -1;
+
     private void Jump()
     {
         bool canJump = false;
 
-        canJump = !Physics.Raycast(new Ray(transform.position, Vector3.up), playerHeight, discludePlayer);
+        canJump = !UnityEngine.Physics.Raycast(new Ray(transform.position, Vector3.up), playerHeight, discludePlayer);
 
         if (grounded && jumpHeight > 0.2f || jumpHeight <= 0.2f && grounded)
         {
             jumpHeight = 0;
             inputJump = false;
+            fallMultiplier = -1;
         }
 
         if (grounded && canJump)
         {
+
             if (Input.GetKeyDown(KeyCode.Space))
             {
                 inputJump = true;
-                transform.position += Vector3.up * 0.6f * 2;
+                transform.position += Vector3.up * 0.2f;
                 jumpHeight += jumpForce;
             }
+
         }
         else
         {
             if (!grounded)
             {
-                jumpHeight -= (jumpHeight * jumpDecrease * Time.deltaTime);
+
+                jumpHeight -= (jumpHeight * jumpDecrease * Time.deltaTime) + fallMultiplier * Time.deltaTime;
+                fallMultiplier += incrementJumpFallSpeed;
+
             }
         }
 

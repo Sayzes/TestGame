@@ -191,7 +191,7 @@ GameObject:
   - component: {fileID: 282840812}
   m_Layer: 0
   m_Name: Main Camera
-  m_TagString: MainCamera
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -402,7 +402,7 @@ GameObject:
   - component: {fileID: 1241220622}
   m_Layer: 9
   m_Name: Capsule
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -487,17 +487,25 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   playerHeight: 2
+  mats:
+  - {fileID: 2100000, guid: 67406e04b57f68f4aa3934e8bc72b0d4, type: 2}
+  - {fileID: 2100000, guid: 376b902b9f44bdd4ebf9fc7e736aa22a, type: 2}
+  - {fileID: 2100000, guid: 55a4d296098af234793c720cdaec1f3d, type: 2}
+  sneakSpeed: 2.5
   movementSpeed: 5
+  runSpeed: 10
   smooth: 0
   smoothSpeed: 0
-  jumpForce: 4
+  jumpForce: 5
   jumpSpeed: 0
   jumpDecrease: 2
+  incrementJumpFallSpeed: 0.1
   gravity: 2.5
   discludePlayer:
     serializedVersion: 2
     m_Bits: 4294966783
   sphereCol: {fileID: 1241220623}
+  rend: {fileID: 1241220619}
 --- !u!135 &1241220623
 SphereCollider:
   m_ObjectHideFlags: 0

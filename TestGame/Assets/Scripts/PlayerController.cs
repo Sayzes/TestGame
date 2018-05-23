@@ -1,8 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Networking;
 
-public class PlayerController : MonoBehaviour
+public class PlayerController : NetworkBehaviour
 {
 
     #region Variables
@@ -35,8 +36,9 @@ public class PlayerController : MonoBehaviour
     public SphereCollider sphereCol;
     public Renderer rend;
 
-
-    int currentcNum;
+    [SyncVar] private int selfColor = 0;
+    [SyncVar] private GameObject objectID;
+    private NetworkIdentity objNetID;
 
 
     //Private Variables
@@ -58,6 +60,7 @@ public class PlayerController : MonoBehaviour
         FinalMove();
         GroundChecking();
         CollisionCheck();
+        CheckColor();
     }
 
     #endregion
@@ -74,7 +77,7 @@ public class PlayerController : MonoBehaviour
     {
         if (Input.GetKey(KeyCode.LeftShift)) {
 
-            ColorChange(2);
+            selfColor = 2;
 
             Vector3 vel = new Vector3(velocity.x * runSpeed, velocity.y * movementSpeed, velocity.z * runSpeed);
 
@@ -85,7 +88,7 @@ public class PlayerController : MonoBehaviour
         }
         else if (Input.GetKey(KeyCode.LeftControl))
         {
-            ColorChange(0);
+            selfColor = 0;
 
             Vector3 vel = new Vector3(velocity.x * sneakSpeed, velocity.y * movementSpeed, velocity.z * sneakSpeed);
 
@@ -97,7 +100,7 @@ public class PlayerController : MonoBehaviour
         else
         {
 
-            ColorChange(1);
+            selfColor = 1;
 
             Vector3 vel = new Vector3(velocity.x, velocity.y, velocity.z) * movementSpeed;
             //velocity = (new Vector3 (move.x, -currentGravity, move.z)+vel)*movementSpeed;
@@ -305,19 +308,32 @@ public class PlayerController : MonoBehaviour
 
     #endregion
 
-    public void ColorChange(int cNum)
+    void CheckColor()
     {
-
-        if (cNum == currentcNum)
+        //Debug.Log("test1");
+        if(isLocalPlayer)
         {
+            objectID = gameObject;
+            CmdPaint(objectID, selfColor);
+        }
+        //Debug.Log("test2");
+    }
 
-        }
-        else
-        {
-            rend.material = mats[cNum];
-            currentcNum = cNum;
-        }
-        
+    [ClientRpc]
+    void RpcPaint(GameObject obj, int col)
+    {
+        rend.material = mats[col];
+        //Debug.Log("test4");
+    }
+
+    [Command]
+    void CmdPaint(GameObject obj, int col)
+    {
+        objNetID = obj.GetComponent<NetworkIdentity>();
+        //objNetID.AssignClientAuthority(connectionToClient);
+        RpcPaint(obj, col);
+        //objNetID.RemoveClientAuthority(connectionToClient);
+        //Debug.Log("test3");
     }
 
 }
